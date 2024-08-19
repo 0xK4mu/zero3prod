@@ -1,10 +1,18 @@
-use std::{future::IntoFuture, time::Duration};
+use tokio::net::TcpListener;
+
+
+async fn spawn_app() {
+    let app = zero3prod::app();
+    let listener = TcpListener::bind("127.0.0.1:8000").await.unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await });
+}
+
 
 #[tokio::test]
 async fn health_check_works() {
     // Arrange
     spawn_app().await;
-    tokio::time::sleep(Duration::from_secs(1)).await;
+    //tokio::time::sleep(Duration::from_secs(1)).await;
     println!("try request");
     let client = reqwest::Client::new();
 
@@ -20,6 +28,3 @@ async fn health_check_works() {
     assert_eq!(Some(0), response.content_length());
 }
 
-async fn spawn_app() {
-    tokio::spawn(zero3prod::run().into_future());
-}
